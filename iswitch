@@ -1,0 +1,327 @@
+#!/usr/bin/env python3
+
+"""Tool for switching between iRODS iCommands configurations"""
+
+import argparse
+from glob import glob
+import os
+import os.path as path
+import re
+from shutil import copyfile
+import sys
+
+
+def main():
+    """Main method"""
+    args = get_args()
+    if args["command"] == "to":
+        switch_to(args["configuration"][0])
+    elif args["command"] == "init":
+        initialize()
+    elif args["command"] == "list":
+        list_configs()
+    elif args["command"] == "add":
+        add_config(args["configuration"][0], args["configuration"][1])
+    elif args["command"] == "update":
+        update_config(args["configuration"][0], args["configuration"][1])
+    elif args["command"] == "rm":
+        rm_config(args["configuration"][0])
+    else:
+        exit_with_error("Error: unknown command")
+
+
+def get_args():
+    """Returns command line arguments of the script."""
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    # Can't require a subparser because of need to maintain
+    # backwards compatibility with Python 3.6
+    subparsers = parser.add_subparsers(
+        dest='command', help='command')
+
+    to_parser = subparsers.add_parser("to",
+                                      help='Switch to another configuration')
+    to_parser.add_argument('configuration', nargs=1,
+                           help='the configuration to switch to')
+
+    add_parser = subparsers.add_parser("add",
+                                       help='Add a new configuration')
+    add_parser.add_argument('configuration', nargs=2,
+                            help='configuration name and filename of the ' +
+                            'new configuration')
+
+    update_parser = subparsers.add_parser("update",
+                                          help='Update an existing configuration')
+    update_parser.add_argument('configuration', nargs=2,
+                               help='name of configuration to be updated and ' +
+                               'name of file containing new configuration')
+
+    rm_parser = subparsers.add_parser(
+        "rm", help="Remove an iRODS configuration")
+    rm_parser.add_argument('configuration', nargs=1,
+                           help='the configuration to remove')
+
+    clone_parser = subparsers.add_parser(
+        "clone", help="Clone the present iRODS configuration")
+    clone_parser.add_argument('configuration', nargs=1,
+                              help='the new name of the cloned configuration')
+
+    subparsers.add_parser("init", help="Initialize iswitch")
+    subparsers.add_parser("list", help="List available iRODS configurations")
+
+    return vars(parser.parse_args())
+
+
+def initialize():
+    """Initializes iswitch with the present iRODS configuration"""
+    if iswitch_initialized():
+        print("iswitch has already been initialized.")
+        exit()
+
+    if not check_irods_config_present():
+        exit_with_error(
+            "In order to initialize iswitch, you will need to create an " +
+            "initial irods configuration file at " + get_irods_config_path())
+    else:
+        if not os.path.isdir(get_iswitch_dir_path()):
+            os.mkdir(get_iswitch_dir_path())
+
+    config = ask_input("Please provide an id for the current irods " +
+                       "configuration (letters and digits only)", "default", "^\w+$")
+
+    copy_and_symlink(get_irods_config_path(),
+                     get_iswitch_configfile_path(config))
+
+    if os.path.isfile(get_irodsa_path()):
+        copyfile(get_irodsa_path(),
+                         get_iswitch_secretfile_path(config))
+
+    print("iswitch initialized - current configuration: {}".format(config))
+
+
+def add_config(configname, configfile):
+    """Adds a configuration in iswitch"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if not os.path.isfile(configfile):
+        exit_with_error("Error: {} does not exist " +
+                        "or is not a file.".format(configfile))
+
+    if config_exists(configname):
+        ask_continue("This configuration already exists. " +
+                     "Do you want to update it?")
+
+    set_config(configname, configfile)
+
+
+def update_config(configname, configfile):
+    """Updates a configuration in iswitch"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if not os.isfile(configfile):
+        exit_with_error("Error: {} does not exist " +
+                        "or is not a file.".format(configfile))
+
+    if not config_exists(config):
+        ask_continue("This configuration does not exist yet. " +
+                     "Do you want to add it?")
+
+    set_config(configname, configfile)
+
+
+def set_config(configname, configfile):
+    """Internal method for updating configuration with
+    new configuration file"""
+    copyfile(configfile, get_iswitch_configfile_path(configname))
+
+
+def rm_config(configname):
+    """Removes a configuration"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if not config_exists(configname):
+        exit_with_error("This configuration does not exist.")
+
+    if configname == get_current_config():
+        exit_with_error("You can't delete the active configuration. " +
+                        "Switch to another configuration first.")
+
+    os.remove(get_iswitch_configfile_path(configname))
+
+    if path.exists(get_iswitch_secretfile_path(configname)):
+        os.remove(get_iswitch_secretfile_path(configname))
+
+
+def list_configs():
+    """Prints a list of configs available via iswitch"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    currentconfig = get_current_config()
+    for config in sorted(get_all_configs()):
+        if config == currentconfig:
+            print("{}*".format(config))
+        else:
+            print(config)
+
+
+def config_exists(config):
+    """Returns value that indicates whether config exists."""
+    return os.path.exists(get_iswitch_configfile_path(config))
+
+
+def check_irods_config_present():
+    return os.path.isfile(get_irods_config_path())
+
+
+def copy_and_symlink(source, destination):
+    """Copy a source file to a destination file. Then symlink the
+    source to the destination"""
+    copyfile(source, destination)
+    os.remove(source)
+    os.symlink(destination, source)
+
+
+def iswitch_config_file_to_config(filename):
+    basename = os.path.basename(filename)
+    if basename.startswith("config-") and basename.endswith(".json"):
+        return basename[7:-5]
+    else:
+        raise Exception(("Unable to convert filename {}" +
+                         " to config name ").format(filename))
+
+
+def get_current_config():
+    """Gets the name of the current configuration. Assumes iswitch has been
+    initialized properly. """
+    return iswitch_config_file_to_config(os.readlink(get_irods_config_path()))
+
+
+def get_all_configs():
+    """Returns a list of all configuration"""
+    configfiles = glob("{}/config-*.json".format(get_iswitch_dir_path()))
+    return list(map(lambda filename: iswitch_config_file_to_config(filename),
+                    configfiles))
+
+
+def ask_input(question, defaultvalue, pattern):
+    """Ask user a question with default answer. Ensure that response matches
+    regular expression"""
+    while True:
+        answer = input("{}\n[{}] >".format(question, defaultvalue))
+        if answer == "":
+            return defaultvalue
+        elif re.match(pattern, answer):
+            return answer
+        else:
+            print("Error: answer does not match expected format.")
+
+
+def ask_continue(question):
+    """Asks user a question regarding whether he/she wants to continue. Exits
+    if user declines"""
+    answer = ask_input(question, "no", "^(y|yes|n|no)$")
+    if answer in ["n", "no"]:
+        exit()
+
+
+def exit_with_error(message):
+    """Print error message to standard error and exit"""
+    print(message, file=sys.stderr)
+    sys.exit(1)
+
+
+def switch_to(config):
+    """Switch to another configuration"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if not config_exists(config):
+        exit_with_error("Configuration {} does not exist.".format(config))
+
+    update_active_config(config)
+    sync_active_secret_file()
+    update_secret_file(config)
+
+
+def get_irods_config_path():
+    """Returns the iRODS configuration file path"""
+    return path.expanduser("~/.irods/irods_environment.json")
+
+
+def get_irodsa_path():
+    """Returns the iRODS secret file path"""
+    return path.expanduser("~/.irods/.irodsA")
+
+
+def get_iswitch_dir_path():
+    """Returns the iswitch directory"""
+    return path.expanduser("~/.irods/iswitch")
+
+
+def get_iswitch_configfile_path(config):
+    """Returns the path of iswitch config file"""
+    return "{}/config-{}.json".format(get_iswitch_dir_path(), config)
+
+
+def get_iswitch_secretfile_path(config):
+    """Returns the path of iswitch config file"""
+    return "{}/irodsA-{}.dat".format(get_iswitch_dir_path(), config)
+
+
+def iswitch_initialized():
+    """Checks whether iswitch has been set up."""
+    return (path.isdir(get_iswitch_dir_path()) and
+            path.islink(get_irods_config_path()) and
+            os.readlink(get_irods_config_path()).startswith(get_iswitch_dir_path()+"/"))
+
+
+def update_active_config(config):
+    """Points the symlink for the irods config file to a new iswitch config"""
+    iswitch_configfile = get_iswitch_configfile_path(config)
+    irods_configfile = get_irods_config_path()
+
+    if not path.exists(iswitch_configfile):
+        exit_with_error("Error: configuration {} not found".format(config))
+
+    os.remove(irods_configfile)
+    os.symlink(iswitch_configfile, irods_configfile)
+
+
+def sync_active_secret_file():
+    """Stores the active .irodsa file in the iswitch directory if it a file.
+    Deletes stored secret file if original has been removed. """
+    irodsa_file = get_irodsa_path()
+    current_iswitch_secret_file = get_iswitch_secretfile_path(
+        get_current_config())
+
+    if path.isfile(irodsa_file):
+        copyfile(irodsa_file, current_iswitch_secret_file)
+
+    if (not path.exists(irodsa_file) and
+            path.exists(current_iswitch_secret_file)):
+        os.remove(current_iswitch_secret_file)
+
+
+def update_secret_file(config):
+    """Points the symlink for the irods secret file to a new iswitch config"""
+    iswitch_secret_file = get_iswitch_secretfile_path(config)
+    irodsa_file = get_irodsa_path()
+
+    if path.exists(irodsa_file):
+        os.remove(irodsa_file)
+
+    if path.exists(iswitch_secret_file):
+        copyfile(iswitch_secret_file, irodsa_file)
+
+
+if __name__ == "__main__":
+    main()
