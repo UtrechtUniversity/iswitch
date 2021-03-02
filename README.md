@@ -9,17 +9,20 @@ example, for switching between different zones or different user accounts.
 This tool requires Python 3.x. If you use an older Linux distribution, you
 may need to install it first. For example:
 
-```yum install python3
+```
+yum install python3
 ```
 
 Put the iswitch script somewhere in your path. For example:
 
-```sudo install -m 0755 iswitch /usr/local/bin/iswitch
+```
+sudo install -m 0755 iswitch /usr/local/bin/iswitch
 ```
 
 Then initialize iswitch with the current iCommands configuration:
 
-```iswitch init
+```
+iswitch init
 ```
 
 ## Usage
