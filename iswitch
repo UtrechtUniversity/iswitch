@@ -7,7 +7,7 @@ from glob import glob
 import os
 import os.path as path
 import re
-from shutil import copyfile
+from shutil import copy2,copyfile
 import sys
 
 
@@ -247,8 +247,8 @@ def switch_to(config):
     if not config_exists(config):
         exit_with_error("Configuration {} does not exist.".format(config))
 
-    update_active_config(config)
     sync_active_secret_file()
+    update_active_config(config)
     update_secret_file(config)
 
 
@@ -297,14 +297,14 @@ def update_active_config(config):
 
 
 def sync_active_secret_file():
-    """Stores the active .irodsa file in the iswitch directory if it a file.
+    """Stores the active .irodsa file in the iswitch directory if it is a file.
     Deletes stored secret file if original has been removed. """
     irodsa_file = get_irodsa_path()
     current_iswitch_secret_file = get_iswitch_secretfile_path(
         get_current_config())
 
     if path.isfile(irodsa_file):
-        copyfile(irodsa_file, current_iswitch_secret_file)
+        copy2(irodsa_file, current_iswitch_secret_file)
 
     if (not path.exists(irodsa_file) and
             path.exists(current_iswitch_secret_file)):
@@ -320,7 +320,8 @@ def update_secret_file(config):
         os.remove(irodsa_file)
 
     if path.exists(iswitch_secret_file):
-        copyfile(iswitch_secret_file, irodsa_file)
+        copy2(iswitch_secret_file, irodsa_file)
+        os.chmod(iswitch_secret_file,0o600)
 
 
 if __name__ == "__main__":
