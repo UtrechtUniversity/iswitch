@@ -33,7 +33,9 @@ def main():
 
 
 def get_args():
-    """Returns command line arguments of the script."""
+    """Returns command line arguments of the script.
+       Exits with error message or help text when user provides
+       wrong or no arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
 
     # Can't require a subparser because of need to maintain
@@ -70,6 +72,10 @@ def get_args():
 
     subparsers.add_parser("init", help="Initialize iswitch")
     subparsers.add_parser("list", help="List available iRODS configurations")
+
+    if len(sys.argv)==1:
+        parser.print_help()
+        parser.exit()
 
     return vars(parser.parse_args())
 
