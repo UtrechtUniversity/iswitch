@@ -37,3 +37,6 @@ Use `iswitch add CONFIGNAME FILENAME` to add a configuration. For example:
 Use `iswitch update CONFIGNAME FILENAME` to update a configuration. For example: `iswitch update production updated_config.json`.
 
 Use `iswitch rm CONFIGNAME` to remove a configuration. For example: `iswitch rm testenvironment`.
+
+Use `iswitch clone NEWCONFIGNAME` to clone the current configuration to a new configuration. For example:
+`iswitch clone copyofproduction`

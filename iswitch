@@ -26,6 +26,8 @@ def main():
         update_config(args["configuration"][0], args["configuration"][1])
     elif args["command"] == "rm":
         rm_config(args["configuration"][0])
+    elif args["command"] == "clone":
+        clone_config(args["configuration"][0])
     else:
         exit_with_error("Error: unknown command")
 
@@ -131,6 +133,25 @@ def update_config(configname, configfile):
                      "Do you want to add it?")
 
     set_config(configname, configfile)
+
+
+def clone_config(configname):
+    """Clones the current configuration to a new config"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if config_exists(configname):
+        exit_with_error(("Unable to clone current config to " +
+            "config {}. It already exists.").format(configname))
+
+    copyfile(get_iswitch_configfile_path(get_current_config()),
+             get_iswitch_configfile_path(configname))
+
+    copy2(get_iswitch_secretfile_path(get_current_config()),
+          get_iswitch_secretfile_path(configname))
+
+    print("Current config cloned to config {}".format(configname))
 
 
 def set_config(configname, configfile):
