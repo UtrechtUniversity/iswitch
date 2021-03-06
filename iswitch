@@ -186,8 +186,9 @@ def clone_config(configname):
     copyfile(get_iswitch_configfile_path(get_current_config()),
              get_iswitch_configfile_path(configname))
 
-    copy2(get_iswitch_secretfile_path(get_current_config()),
-          get_iswitch_secretfile_path(configname))
+    if os.path.exists(get_iswitch_secretfile_path(get_current_config())):
+        copy2(get_iswitch_secretfile_path(get_current_config()),
+              get_iswitch_secretfile_path(configname))
 
     print("Current config cloned to config {}".format(configname))
 
