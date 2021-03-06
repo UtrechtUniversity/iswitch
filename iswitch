@@ -4,6 +4,7 @@
 
 import argparse
 from glob import glob
+import json
 import os
 import os.path as path
 import re
@@ -111,6 +112,10 @@ def initialize():
         if not os.path.isdir(get_iswitch_dir_path()):
             os.mkdir(get_iswitch_dir_path())
 
+    if not check_valid_json(get_irods_config_path()):
+        ask_continue("The current iRODS configuration does not appear to" +
+                     " contain valid JSON data. Do you want to continue?")
+
     config = ask_input("Please provide an id for the current irods " +
                        "configuration (letters and digits only)", "default", "^\w+$")
 
@@ -129,6 +134,10 @@ def add_config(configname, configfile):
     if not os.path.isfile(configfile):
         exit_with_error("Error: {} does not exist " +
                         "or is not a file.".format(configfile))
+
+    if not check_valid_json(configfile):
+        ask_continue("{} does not appear to contain valid JSON data.".format(
+            configfile) + " Do you want to continue?")
 
     if config_exists(configname):
         ask_continue("This configuration already exists. " +
@@ -197,6 +206,9 @@ def edit_config():
     """Opens an editor for the current configuration"""
     configfile = get_iswitch_configfile_path(get_current_config())
     os.system("{} {}".format(get_editor(), configfile))
+    if not check_valid_json(configfile):
+        print("Warning: the file does not appear to contain valid JSON data" +
+        " after editing.")
 
 
 def get_editor():
@@ -321,6 +333,15 @@ def switch_to(config):
     update_secret_file(config)
 
     print("Current config: {}".format(config))
+
+
+def check_valid_json(filename):
+    with open(filename) as f:
+        try:
+            json.load(f)
+            return True
+        except ValueError:
+            return False
 
 
 def get_irods_config_path():
