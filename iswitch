@@ -26,6 +26,8 @@ def main():
 
     if args["command"] == "to":
         switch_to(args["configuration"][0])
+    elif args["command"] == "which":
+        print(get_current_config())
     elif args["command"] == "list":
         list_configs()
     elif args["command"] == "edit":
@@ -90,6 +92,7 @@ def get_args():
     subparsers.add_parser("init", help="Initialize iswitch")
     subparsers.add_parser("edit", help="Edit the current configuration")
     subparsers.add_parser("list", help="List available iRODS configurations")
+    subparsers.add_parser("which", help="Print current configuration")
 
     if len(sys.argv) == 1:
         parser.print_help()

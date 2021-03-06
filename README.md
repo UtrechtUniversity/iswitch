@@ -25,9 +25,20 @@ Then initialize iswitch with the current iCommands configuration:
 iswitch init
 ```
 
+If you'd like your shell prompt to show the name of your present iRODS configuration,
+you can add a call to iswitch in your prompt definition in ~/.bashrc or ~/.bash\_profile
+(depending on your Linux distribution). For example:
+
+```
+PS1="[\u@\h:\w \$(/usr/local/bin/iswitch which)] $ "
+```
+
+The new prompt will become active when you open a new shell/terminal.
+
 ## Usage
 
-Use `iswitch list` to print a list of available configurations.
+Use `iswitch list` to print a list of available configurations, and `iswitch which` to see just the current
+configuration.
 
 use `iswitch to CONFIGNAME` to switch to a different configuration. For example: `iswitch to testenvironment`
 
