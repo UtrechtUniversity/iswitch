@@ -14,10 +14,17 @@ import sys
 def main():
     """Main method"""
     args = get_args()
+
+    if args["command"] == "init":
+        initialize()
+        exit()
+
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
     if args["command"] == "to":
         switch_to(args["configuration"][0])
-    elif args["command"] == "init":
-        initialize()
     elif args["command"] == "list":
         list_configs()
     elif args["command"] == "edit":
@@ -119,10 +126,6 @@ def initialize():
 
 def add_config(configname, configfile):
     """Adds a configuration in iswitch"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if not os.path.isfile(configfile):
         exit_with_error("Error: {} does not exist " +
                         "or is not a file.".format(configfile))
@@ -136,10 +139,6 @@ def add_config(configname, configfile):
 
 def update_config(configname, configfile):
     """Updates a configuration in iswitch"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if not os.path.isfile(configfile):
         exit_with_error("Error: {} does not exist " +
                         "or is not a file.".format(configfile))
@@ -152,10 +151,6 @@ def update_config(configname, configfile):
 
 
 def mv_config(source, destination):
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if not config_exists(source):
         exit_with_error("Error: source configuration does not exist")
 
@@ -184,10 +179,6 @@ def mv_config(source, destination):
 
 def clone_config(configname):
     """Clones the current configuration to a new config"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if config_exists(configname):
         exit_with_error(("Unable to clone current config to " +
                          "config {}. It already exists.").format(configname))
@@ -203,10 +194,6 @@ def clone_config(configname):
 
 def edit_config():
     """Opens an editor for the current configuration"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     configfile = get_iswitch_configfile_path(get_current_config())
     os.system("{} {}".format(get_editor(), configfile))
 
@@ -234,10 +221,6 @@ def set_config(configname, configfile):
 
 def rm_config(configname):
     """Removes a configuration"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if not config_exists(configname):
         exit_with_error("This configuration does not exist.")
 
@@ -253,10 +236,6 @@ def rm_config(configname):
 
 def list_configs():
     """Prints a list of configs available via iswitch"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     currentconfig = get_current_config()
     for config in sorted(get_all_configs()):
         if config == currentconfig:
@@ -333,10 +312,6 @@ def exit_with_error(message):
 
 def switch_to(config):
     """Switch to another configuration"""
-    if not iswitch_initialized():
-        exit_with_error("iswitch has not been initialized yet. " +
-                        "Use \"iswitch init\" to set it up.")
-
     if not config_exists(config):
         exit_with_error("Configuration {} does not exist.".format(config))
 
