@@ -20,6 +20,8 @@ def main():
         initialize()
     elif args["command"] == "list":
         list_configs()
+    elif args["command"] == "edit":
+        edit_config()
     elif args["command"] == "add":
         add_config(args["configuration"][0], args["configuration"][1])
     elif args["command"] == "update":
@@ -71,6 +73,7 @@ def get_args():
                               help='the new name of the cloned configuration')
 
     subparsers.add_parser("init", help="Initialize iswitch")
+    subparsers.add_parser("edit", help="Edit the current configuration")
     subparsers.add_parser("list", help="List available iRODS configurations")
 
     if len(sys.argv)==1:
@@ -158,6 +161,31 @@ def clone_config(configname):
           get_iswitch_secretfile_path(configname))
 
     print("Current config cloned to config {}".format(configname))
+
+
+def edit_config():
+    """Opens an editor for the current configuration"""
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    configfile = get_iswitch_configfile_path(get_current_config())
+    os.system("{} {}".format(get_editor(),configfile))
+
+
+def get_editor():
+    """Returns path to an editor, as defined in environment, or else a default
+    one"""
+    default_editor=os.environ.get("EDITOR")
+    if default_editor is not None and os.path.isfile(default_editor):
+        return default_editor
+    elif os.path.isfile("/usr/bin/vim"):
+        return "/usr/bin/vim"
+    elif os.path.isfile("usr/bin/vi"):
+        return "/usr/bin/vi"
+    else:
+        exit_with_error("Unable to find an editor. Please define one in " +
+        "the $EDITOR environment variable.")
 
 
 def set_config(configname, configfile):

@@ -40,3 +40,6 @@ Use `iswitch rm CONFIGNAME` to remove a configuration. For example: `iswitch rm 
 
 Use `iswitch clone NEWCONFIGNAME` to clone the current configuration to a new configuration. For example:
 `iswitch clone copyofproduction`
+
+Use `iswitch edit` to open the current configuration in an editor. If a default editor has been defined in the EDITOR
+environment variable, that one is used. Otherwise vi/vim is used.
