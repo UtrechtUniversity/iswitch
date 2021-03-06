@@ -320,6 +320,8 @@ def switch_to(config):
     update_active_config(config)
     update_secret_file(config)
 
+    print("Current config: {}".format(config))
+
 
 def get_irods_config_path():
     """Returns the iRODS configuration file path"""
