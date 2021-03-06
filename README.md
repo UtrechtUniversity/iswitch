@@ -1,22 +1,28 @@
 # iswitch
 easy switching between iRODS iCommands configurations
 
-iswitch is a tool for switching between irods iCommands configurations. For
-example, for switching between different zones or different user accounts.
+iswitch is a script for managing iRODS iCommands configurations. It is
+intended for situations when you need to be able to switch easily between
+multiple configurations, for example if you need to work with multiple
+nonfederated zones or with multiple user accounts. The advantage of using
+iswitch is that you can switch between configurations with a single short
+command (e.g. `iswitch to production`), rather than having to adjust
+environment variables and log in again after every configuration switch.
 
 ## Installation
 
-This tool requires Python 3.x. If you use an older Linux distribution, you
-may need to install it first. For example:
+iswitch requires Python 3. It has been tested with Python 3.6.x and higher.
+If your Linux distribution doesn't include Python 3, you'll need to install it
+first. Example command for CentOS 7:
 
 ```
-yum install python3
+sudo yum install python3
 ```
 
 Put the iswitch script somewhere in your path. For example:
 
 ```
-sudo install -m 0755 iswitch /usr/local/bin/iswitch
+sudo install -m 0755 -g root -o root iswitch /usr/local/bin/iswitch
 ```
 
 Then initialize iswitch with the current iCommands configuration:
