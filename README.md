@@ -43,3 +43,6 @@ Use `iswitch clone NEWCONFIGNAME` to clone the current configuration to a new co
 
 Use `iswitch edit` to open the current configuration in an editor. If a default editor has been defined in the EDITOR
 environment variable, that one is used. Otherwise vi/vim is used.
+
+Use `iswitch mv SOURCECONFIG DESTINATIONCONFIG` to move or rename a configuration. If you intend to move the current configuration
+or overwrite the current configuration, please switch to another config first.

@@ -24,6 +24,8 @@ def main():
         edit_config()
     elif args["command"] == "add":
         add_config(args["configuration"][0], args["configuration"][1])
+    elif args["command"] == "mv":
+        mv_config(args["configuration"][0], args["configuration"][1])
     elif args["command"] == "update":
         update_config(args["configuration"][0], args["configuration"][1])
     elif args["command"] == "rm":
@@ -55,6 +57,11 @@ def get_args():
     add_parser.add_argument('configuration', nargs=2,
                             help='configuration name and filename of the ' +
                             'new configuration')
+
+    add_parser = subparsers.add_parser("mv",
+                                       help='Renames/moves a configuration')
+    add_parser.add_argument('configuration', nargs=2,
+                            help='source and destination configuration')
 
     update_parser = subparsers.add_parser("update",
                                           help='Update an existing configuration')
@@ -142,6 +149,37 @@ def update_config(configname, configfile):
                      "Do you want to add it?")
 
     set_config(configname, configfile)
+
+
+def mv_config(source, destination):
+    if not iswitch_initialized():
+        exit_with_error("iswitch has not been initialized yet. " +
+                        "Use \"iswitch init\" to set it up.")
+
+    if not config_exists(source):
+        exit_with_error("Error: source configuration does not exist")
+
+    if get_current_config() == source:
+        exit_with_error("Error: moving the current config is not supported." +
+                        " Please switch to another config first.")
+
+    if get_current_config() == destination:
+        exit_with_error("Error: overwriting the current config is not" +
+                        " supported. Pleae switch to another config first.")
+
+    if config_exists(destination):
+        ask_continue("The destination config already exists. " +
+                     "Do you want to overwrite it?")
+        rm_config(destination)
+
+    copy2(get_iswitch_configfile_path(source),
+          get_iswitch_configfile_path(destination))
+
+    if path.isfile(get_iswitch_secretfile_path(source)):
+        copy2(get_iswitch_secretfile_path(source),
+              get_iswitch_secretfile_path(destination))
+
+    rm_config(source)
 
 
 def clone_config(configname):
