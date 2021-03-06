@@ -7,7 +7,7 @@ from glob import glob
 import os
 import os.path as path
 import re
-from shutil import copy2,copyfile
+from shutil import copy2, copyfile
 import sys
 
 
@@ -76,7 +76,7 @@ def get_args():
     subparsers.add_parser("edit", help="Edit the current configuration")
     subparsers.add_parser("list", help="List available iRODS configurations")
 
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help()
         parser.exit()
 
@@ -105,7 +105,7 @@ def initialize():
 
     if os.path.isfile(get_irodsa_path()):
         copyfile(get_irodsa_path(),
-                         get_iswitch_secretfile_path(config))
+                 get_iswitch_secretfile_path(config))
 
     print("iswitch initialized - current configuration: {}".format(config))
 
@@ -152,7 +152,7 @@ def clone_config(configname):
 
     if config_exists(configname):
         exit_with_error(("Unable to clone current config to " +
-            "config {}. It already exists.").format(configname))
+                         "config {}. It already exists.").format(configname))
 
     copyfile(get_iswitch_configfile_path(get_current_config()),
              get_iswitch_configfile_path(configname))
@@ -170,13 +170,13 @@ def edit_config():
                         "Use \"iswitch init\" to set it up.")
 
     configfile = get_iswitch_configfile_path(get_current_config())
-    os.system("{} {}".format(get_editor(),configfile))
+    os.system("{} {}".format(get_editor(), configfile))
 
 
 def get_editor():
     """Returns path to an editor, as defined in environment, or else a default
     one"""
-    default_editor=os.environ.get("EDITOR")
+    default_editor = os.environ.get("EDITOR")
     if default_editor is not None and os.path.isfile(default_editor):
         return default_editor
     elif os.path.isfile("/usr/bin/vim"):
@@ -185,7 +185,7 @@ def get_editor():
         return "/usr/bin/vi"
     else:
         exit_with_error("Unable to find an editor. Please define one in " +
-        "the $EDITOR environment variable.")
+                        "the $EDITOR environment variable.")
 
 
 def set_config(configname, configfile):
@@ -376,7 +376,7 @@ def update_secret_file(config):
 
     if path.exists(iswitch_secret_file):
         copy2(iswitch_secret_file, irodsa_file)
-        os.chmod(iswitch_secret_file,0o600)
+        os.chmod(iswitch_secret_file, 0o600)
 
 
 if __name__ == "__main__":
