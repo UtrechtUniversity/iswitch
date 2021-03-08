@@ -211,7 +211,7 @@ def edit_config():
     os.system("{} {}".format(get_editor(), configfile))
     if not check_valid_json(configfile):
         print("Warning: the file does not appear to contain valid JSON data" +
-        " after editing.")
+              " after editing.")
 
 
 def get_editor():
