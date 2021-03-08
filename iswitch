@@ -12,6 +12,11 @@ from shutil import copy2, copyfile
 import sys
 
 
+def get_version():
+    """Returns version number of script"""
+    return "1.0.0"
+
+
 def main():
     """Main method"""
     args = get_args()
@@ -51,6 +56,8 @@ def get_args():
        Exits with error message or help text when user provides
        wrong or no arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--version', action='version',
+                        version="iswitch version "+ get_version())
 
     # Can't require a subparser because of need to maintain
     # backwards compatibility with Python 3.6
