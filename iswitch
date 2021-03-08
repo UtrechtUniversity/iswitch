@@ -155,6 +155,10 @@ def update_config(configname, configfile):
         exit_with_error("Error: {} does not exist " +
                         "or is not a file.".format(configfile))
 
+    if not check_valid_json(configfile):
+        ask_continue("{} does not appear to contain valid JSON data.".format(
+            configfile) + " Do you want to continue?")
+
     if not config_exists(configname):
         ask_continue("This configuration does not exist yet. " +
                      "Do you want to add it?")
