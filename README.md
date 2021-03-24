@@ -31,6 +31,8 @@ Then initialize iswitch with the current iCommands configuration:
 iswitch init
 ```
 
+### Customizing the shell prompt
+
 If you'd like your shell prompt to show the name of your present iRODS configuration,
 you can add a call to iswitch in your prompt definition in ~/.bashrc or ~/.bash\_profile
 (depending on your Linux distribution). For example:
@@ -40,6 +42,22 @@ PS1="[\u@\h:\w \$(/usr/local/bin/iswitch which)] $ "
 ```
 
 The new prompt will become active when you open a new shell/terminal.
+
+### Command-line completion
+
+If you'd like to have command-line completion for iswitch, first ensure that your
+distribution has command line completion installed. Example for CentOS 7:
+
+```
+sudo yum -y install epel-release
+sudo yum -y install bash-completion
+```
+
+Then install the completion script for iswitch:
+
+```
+install -m 0644 -o root -g root iswitch-complete.sh /etc/bash_completion.d/iswitch
+```
 
 ## Usage
 
